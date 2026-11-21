@@ -1,0 +1,28 @@
+# Supabase CLI configuration (used by `supabase start` / `supabase functions deploy`).
+project_id = "smart-restroom"
+
+[api]
+schemas = ["public"]
+
+[auth]
+site_url = "http://localhost:5173"
+# Accounts are created by the administrator only.
+enable_signup = false
+
+[auth.email]
+enable_signup = false
+enable_confirmations = false
+
+# Hardware and Telegram cannot send Supabase JWTs; these functions
+# authenticate requests with their own secrets.
+[functions.turnstile-events]
+verify_jwt = false
+
+[functions.telegram-bot]
+verify_jwt = false
+
+[functions.telegram-dispatch]
+verify_jwt = false
+
+[functions.admin-users]
+verify_jwt = true

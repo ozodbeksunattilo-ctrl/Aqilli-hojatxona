@@ -1,0 +1,11 @@
+node_modules
+dist
+.env
+.env.local
+*.log
+.test-db
+supabase/.temp
+supabase/.branches
+.DS_Store
+.sim-queue-*.json
+.vercel

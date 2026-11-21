@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
+    "baseUrl": ".",
+    "paths": { "@/*": ["src/*"] },
+    "types": ["node"]
+  },
+  "include": ["vite.config.ts", "vitest.config.ts", "tailwind.config.ts", "scripts", "tests", "hardware/simulator", "supabase/functions/_shared/events.ts", "supabase/functions/_shared/telegram.ts", "supabase/functions/_shared/http.ts"]
+}
