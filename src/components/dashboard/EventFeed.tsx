@@ -3,12 +3,14 @@ import { Radio } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { formatTimeSec, relativeTime } from '@/lib/format';
 import { useNow } from '@/hooks/useNow';
+import { useT } from '@/i18n/I18nProvider';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/misc';
 import { Skeleton } from '@/components/ui/Spinner';
 import type { EntryEvent } from '@/types/domain';
 
 export function EventFeed({ events, loading, className }: { events: EntryEvent[] | undefined; loading?: boolean; className?: string }) {
+  const t = useT();
   useNow(10_000); // keep relative times fresh
   if (loading && !events) {
     return (
@@ -18,7 +20,7 @@ export function EventFeed({ events, loading, className }: { events: EntryEvent[]
     );
   }
   if (!events?.length) {
-    return <EmptyState icon={<Radio className="h-5 w-5" />} title="Waiting for visitors" description="Confirmed turnstile passages appear here in real time." />;
+    return <EmptyState icon={<Radio className="h-5 w-5" />} title={t('Waiting for visitors')} description={t('Confirmed turnstile passages appear here in real time.')} />;
   }
   return (
     <ul className={cn('scrollbar-thin -mx-2 max-h-[420px] overflow-y-auto', className)}>
@@ -35,10 +37,10 @@ export function EventFeed({ events, loading, className }: { events: EntryEvent[]
             </span>
             <div className="relative min-w-0 flex-1">
               <div className="flex items-center gap-2 text-sm font-medium">
-                {e.gender === 'male' ? 'Male visitor' : 'Female visitor'}
-                {e.source === 'simulated' && <Badge tone="warn">simulated</Badge>}
-                {e.attribution === 'late' && <Badge tone="brand">synced late</Badge>}
-                {e.attribution === 'unassigned' && <Badge tone="danger">no shift</Badge>}
+                {e.gender === 'male' ? t('Male visitor') : t('Female visitor')}
+                {e.source === 'simulated' && <Badge tone="warn">{t('simulated')}</Badge>}
+                {e.attribution === 'late' && <Badge tone="brand">{t('synced late')}</Badge>}
+                {e.attribution === 'unassigned' && <Badge tone="danger">{t('no shift')}</Badge>}
               </div>
               <div className="truncate font-mono notranslate text-[11px] text-subtle">{e.device_id} · {e.event_id}</div>
             </div>

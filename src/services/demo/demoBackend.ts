@@ -43,7 +43,7 @@ interface DemoState {
 
 const KEY = 'sr-demo-state-v2';
 const SESSION_KEY = 'sr-demo-session';
-const VERSION = 2;
+const VERSION = 3;
 
 const uid = () => crypto.randomUUID();
 const nowIso = () => new Date().toISOString();
@@ -66,7 +66,7 @@ function seed(): DemoState {
   const now = new Date();
   const today = todayStr();
 
-  for (let d = 34; d >= 0; d--) {
+  for (let d = 4; d >= 0; d--) {
     const day = addDays(today, -d);
     const weekday = new Date(`${day}T00:00:00`).getDay();
     const dayFactor = (weekday === 0 || weekday === 6 ? 1.25 : 1) * (0.85 + Math.random() * 0.3);

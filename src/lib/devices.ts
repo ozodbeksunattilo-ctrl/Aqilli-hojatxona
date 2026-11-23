@@ -11,7 +11,7 @@ export function connectionOf(d: Device, offlineAfterSeconds: number, now = Date.
   return online ? 'online' : 'offline';
 }
 
-export const connectionLabel: Record<Connection, string> = {
+export const connectionLabelKey: Record<Connection, string> = {
   online: 'Online',
   offline: 'Offline',
   never_seen: 'Not connected yet',

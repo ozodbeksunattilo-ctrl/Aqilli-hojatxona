@@ -94,7 +94,8 @@ export async function freshDb(): Promise<TestDb> {
   const name = `t_${randomUUID().replace(/-/g, '').slice(0, 12)}`;
   const admin = new pg.Client({ host: 'localhost', port: PORT, user: 'postgres', password: 'postgres', database: 'postgres' });
   await admin.connect();
-  await admin.query(`create database ${name}`);
+  // UTF8 like Supabase (the Windows default cluster encoding may be a legacy code page).
+  await admin.query(`create database ${name} encoding 'UTF8' lc_collate 'C' lc_ctype 'C' template template0`);
   await admin.end();
 
   const pool = new pg.Pool({ host: 'localhost', port: PORT, user: 'postgres', password: 'postgres', database: name, max: 40 });

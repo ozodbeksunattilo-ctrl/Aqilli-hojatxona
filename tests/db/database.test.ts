@@ -109,12 +109,15 @@ describe('permission restrictions (RLS)', () => {
 
   it('employees cannot call admin functions', async () => {
     for (const sql of [
-      `select public.get_daily_stats(current_date - 7, current_date)`,
-      `select public.get_employee_performance(current_date - 7, current_date)`,
       `select public.update_settings('{"business_name":"x"}')`,
       `select public.admin_rotate_device_token('MEN-001')`,
       `select public.simulate_passage('MEN-001')`,
       `select public.build_daily_report(null)`,
+      `select public.get_recent_summary(7)`,
+      `select public.get_events(current_date - 7, current_date)`,
+      `select public.create_telegram_invite(null)`,
+      `select public.configure_automation('https://example.com/api')`,
+      `select public.get_automation_status()`,
     ]) {
       await expect(db.as(user(asqarId), sql), sql).rejects.toThrow(/Administrator access required/);
     }
@@ -405,16 +408,19 @@ describe('statistics & telegram outbox', () => {
     expect(daily).toHaveLength(8);
     expect(daily.reduce((n, d) => n + Number(d.total), 0)).toBe(4);
 
-    const perf = await db.as(user(adminId), `select * from public.get_employee_performance(current_date - 1, current_date + 1)`);
-    expect(perf.find((p) => p.username === 'asqar')).toMatchObject({ total: '4', shifts: '2' });
+    const [{ p }] = await db.as(user(adminId), `select public.get_period_summary(current_date - 1, current_date + 1) p`);
+    expect(p.employees.find((e: any) => e.username === 'asqar')).toMatchObject({ total: 4, shifts: 2 });
   });
 
-  it('cron_tick enqueues one daily report per day at the configured hour', async () => {
+  it('cron_tick enqueues one daily report (for the previous day) at the configured hour', async () => {
     const [{ h }] = await db.pool.query(`select extract(hour from now() at time zone 'Asia/Tashkent')::int h`).then((r) => r.rows);
     await db.as(user(adminId), `select public.update_settings($1)`, [JSON.stringify({ daily_report_hour: h })]);
     await db.as(service, `select public.cron_tick()`);
     await db.as(service, `select public.cron_tick()`);
-    const rows = await db.as({ kind: 'superuser' }, `select kind from public.notification_outbox where kind = 'daily_report'`);
+    const rows = await db.as({ kind: 'superuser' },
+      `select payload->>'date' d from public.notification_outbox where kind = 'daily_report'`);
     expect(rows).toHaveLength(1);
+    const [{ y }] = await db.pool.query(`select ((now() at time zone 'Asia/Tashkent')::date - 1)::text y`).then((r) => r.rows);
+    expect(rows[0].d).toBe(y);
   });
 });

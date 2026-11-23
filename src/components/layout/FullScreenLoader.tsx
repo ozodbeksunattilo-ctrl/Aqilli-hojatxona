@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
+import { t } from '@/i18n';
 import { Logo } from './Logo';
 
-export function FullScreenLoader({ label = 'Loading' }: { label?: string }) {
+export function FullScreenLoader({ label = t('Loading') }: { label?: string }) {
   return (
     <div className="grid min-h-screen place-items-center bg-bg">
       <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-5">

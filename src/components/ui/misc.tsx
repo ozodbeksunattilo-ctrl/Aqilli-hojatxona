@@ -8,7 +8,11 @@ export function AnimatedNumber({ value, className }: { value: number; className?
   const mv = useMotionValue(value);
   const text = useTransform(mv, (v) => formatNumber(Math.round(v)));
   useEffect(() => {
-    const controls = animate(mv, value, { duration: 0.6, ease: [0.16, 1, 0.3, 1] });
+    if (value >= mv.get()) {
+      mv.set(value);
+      return;
+    }
+    const controls = animate(mv, value, { duration: 0.35, ease: [0.16, 1, 0.3, 1] });
     return controls.stop;
   }, [mv, value]);
   return <motion.span translate="no" className={cn('notranslate', className)}>{text}</motion.span>;
@@ -17,7 +21,7 @@ export function AnimatedNumber({ value, className }: { value: number; className?
 export function EmptyState({ icon, title, description, action }: { icon: ReactNode; title: string; description?: string; action?: ReactNode }) {
   return (
     <div className="flex flex-col items-center justify-center px-6 py-12 text-center">
-      <div className="mb-4 grid h-12 w-12 place-items-center rounded-2xl border bg-elevated text-subtle">{icon}</div>
+      <div className="icon-tile tone-brand mb-4 h-14 w-14 rounded-2xl [&_svg]:h-6 [&_svg]:w-6">{icon}</div>
       <p className="text-sm font-medium">{title}</p>
       {description && <p className="mt-1 max-w-sm text-[13px] text-subtle">{description}</p>}
       {action && <div className="mt-4">{action}</div>}
@@ -30,12 +34,12 @@ export function ErrorNote({ message, className }: { message: string; className?:
 }
 
 const accents = {
-  brand: 'text-brand bg-brand/10',
-  male: 'text-male bg-male/10',
-  female: 'text-female bg-female/10',
-  ok: 'text-ok bg-ok/10',
-  warn: 'text-warn bg-warn/10',
-  neutral: 'text-muted bg-elevated',
+  brand: 'tone-brand',
+  male: 'tone-male',
+  female: 'tone-female',
+  ok: 'tone-ok',
+  warn: 'tone-warn',
+  neutral: 'tone-neutral',
 };
 
 export function StatCard({ label, value, icon, accent = 'neutral', hint, index = 0 }: {
@@ -50,7 +54,7 @@ export function StatCard({ label, value, icon, accent = 'neutral', hint, index =
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.04, duration: 0.35 }} className="card p-5">
       <div className="flex items-center justify-between">
         <span className="label">{label}</span>
-        <span className={cn('grid h-8 w-8 place-items-center rounded-lg', accents[accent])}>{icon}</span>
+        <span className={cn('icon-tile h-10 w-10 rounded-xl [&_svg]:h-[19px] [&_svg]:w-[19px]', accents[accent])}>{icon}</span>
       </div>
       <div className="mt-3 text-[28px] font-semibold leading-none tracking-tight tabular notranslate">
         {value === undefined ? <Skeleton className="h-7 w-20" /> : typeof value === 'number' ? <AnimatedNumber value={value} /> : value}

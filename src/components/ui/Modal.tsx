@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { useEffect, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '@/lib/cn';
+import { useT } from '@/i18n/I18nProvider';
 
 export function Modal({ open, onClose, title, description, children, footer, className }: {
   open: boolean;
@@ -13,6 +14,7 @@ export function Modal({ open, onClose, title, description, children, footer, cla
   footer?: ReactNode;
   className?: string;
 }) {
+  const t = useT();
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
@@ -35,7 +37,7 @@ export function Modal({ open, onClose, title, description, children, footer, cla
                 <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
                 {description && <p className="mt-1 text-sm text-subtle">{description}</p>}
               </div>
-              <button onClick={onClose} className="-mr-2 -mt-1 rounded-lg p-2 text-subtle hover:bg-elevated hover:text-fg" aria-label="Close">
+              <button onClick={onClose} className="-mr-2 -mt-1 rounded-lg p-2 text-subtle hover:bg-elevated hover:text-fg" aria-label={t('Close')}>
                 <X className="h-4 w-4" />
               </button>
             </div>

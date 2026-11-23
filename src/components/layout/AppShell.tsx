@@ -2,13 +2,13 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   BarChart3,
   CalendarClock,
-  Cpu,
   FileText,
   History,
   LayoutDashboard,
   LogOut,
   Menu,
   Moon,
+  RadioTower,
   Settings as SettingsIcon,
   Sun,
   Users,
@@ -21,8 +21,13 @@ import { useAuth } from '@/auth/AuthProvider';
 import { useTheme } from '@/hooks/useTheme';
 import { useSettings } from '@/hooks/useSettings';
 import { useNow } from '@/hooks/useNow';
+import { useT } from '@/i18n/I18nProvider';
+import { LanguageSwitcher } from '@/i18n/LanguageSwitcher';
+import { localeTag } from '@/lib/format';
 import { cn } from '@/lib/cn';
 import { Badge, LiveDot } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Modal } from '@/components/ui/Modal';
 import { Wordmark } from './Logo';
 import { DemoBanner } from './DemoBanner';
 
@@ -39,7 +44,7 @@ const ADMIN_NAV: NavItem[] = [
   { to: '/admin/employees', label: 'Employees', icon: Users },
   { to: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
   { to: '/admin/reports', label: 'Reports', icon: FileText },
-  { to: '/admin/devices', label: 'Devices', icon: Cpu },
+  { to: '/admin/devices', label: 'Devices', icon: RadioTower },
   { to: '/admin/settings', label: 'Settings', icon: SettingsIcon },
 ];
 
@@ -52,19 +57,26 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
   const { data: settings } = useSettings();
+  const t = useT();
   const items = profile?.role === 'admin' ? ADMIN_NAV : EMPLOYEE_NAV;
+  const [confirmSignOut, setConfirmSignOut] = useState(false);
+
+  const signOutNow = async () => {
+    await signOut();
+    navigate('/login', { replace: true });
+  };
 
   return (
     <div className="flex h-full flex-col">
       <div className="px-5 pb-6 pt-6">
-        <Wordmark sub={settings?.business_name ?? 'Visitor management'} />
+        <Wordmark sub={settings?.business_name ?? t('Visitor management')} />
       </div>
-      <div className="label px-6 pb-2">{profile?.role === 'admin' ? 'Administration' : 'Workspace'}</div>
+      <div className="label px-6 pb-2">{profile?.role === 'admin' ? t('Administration') : t('Workspace')}</div>
       <nav className="flex-1 space-y-0.5 px-3">
         {items.map(({ to, label, icon: Icon, end }) => (
           <NavLink key={to} to={to} end={end} onClick={onNavigate}
             className={({ isActive }) => cn(
-              'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
+              'group relative flex min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
               isActive ? 'text-fg' : 'text-subtle hover:bg-elevated/70 hover:text-fg',
             )}>
             {({ isActive }) => (
@@ -73,8 +85,12 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                   <motion.span layoutId="nav-active" className="absolute inset-0 rounded-xl border bg-elevated"
                     transition={{ type: 'spring', stiffness: 500, damping: 40 }} />
                 )}
-                <Icon className={cn('relative h-[18px] w-[18px]', isActive && 'text-brand')} />
-                <span className="relative">{label}</span>
+                {isActive && <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-brand" />}
+                <span className={cn('relative grid h-8 w-8 shrink-0 place-items-center rounded-[10px] transition-colors',
+                  isActive ? 'icon-tile tone-brand' : 'text-subtle group-hover:bg-elevated group-hover:text-fg')}>
+                  <Icon className="h-[17px] w-[17px]" strokeWidth={1.85} />
+                </span>
+                <span className="relative truncate">{t(label)}</span>
               </>
             )}
           </NavLink>
@@ -89,13 +105,19 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             <div className="truncate text-sm font-medium">{profile?.full_name}</div>
             <div className="truncate text-xs capitalize text-subtle">@{profile?.username} · {profile?.role}</div>
           </div>
-          <button title="Sign out" aria-label="Sign out"
-            onClick={async () => { await signOut(); navigate('/login', { replace: true }); }}
-            className="rounded-lg p-2 text-subtle transition-colors hover:bg-surface hover:text-danger">
-            <LogOut className="h-4 w-4" />
-          </button>
         </div>
+        <Button variant="danger" size="lg" icon={<LogOut className="h-4 w-4" />}
+          onClick={() => setConfirmSignOut(true)}
+          className="mt-3 w-full border-danger bg-danger text-white shadow-[0_8px_24px_-8px_rgb(var(--danger)/0.6)] hover:bg-danger/90">
+          {t('Sign out')}
+        </Button>
       </div>
+
+      <Modal open={confirmSignOut} onClose={() => setConfirmSignOut(false)} title={t('Do you really want to log out?')}
+        footer={<>
+          <Button variant="ghost" onClick={() => setConfirmSignOut(false)}>{t('Cancel')}</Button>
+          <Button variant="danger" className="border-danger bg-danger text-white hover:bg-danger/90" onClick={signOutNow}>{t('Sign out')}</Button>
+        </>} />
     </div>
   );
 }
@@ -103,6 +125,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 function Topbar({ onMenu }: { onMenu: () => void }) {
   const { resolved, toggle } = useTheme();
   const { data: settings } = useSettings();
+  const t = useT();
   const now = useNow(1000);
   const [online, setOnline] = useState(navigator.onLine);
   useEffect(() => {
@@ -118,24 +141,25 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-bg/80 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
-      <button onClick={onMenu} className="-ml-1 rounded-lg p-2 text-muted hover:bg-elevated lg:hidden" aria-label="Open menu">
+      <button onClick={onMenu} className="-ml-1 shrink-0 rounded-lg p-2 text-muted hover:bg-elevated lg:hidden" aria-label={t('Open menu')}>
         <Menu className="h-5 w-5" />
       </button>
       <div className="flex min-w-0 items-center gap-2.5">
         {online ? <LiveDot /> : <LiveDot tone="danger" />}
-        <span className="truncate text-sm text-muted">{online ? 'Live' : 'Offline — reconnecting'}</span>
+        <span className="truncate text-sm text-muted">{online ? t('Live') : t('Offline — reconnecting')}</span>
         {settings && (
           <Badge tone={settings.system_mode === 'production' ? 'ok' : 'warn'} className="ml-1 hidden sm:inline-flex">
-            {settings.system_mode === 'production' ? 'Production' : 'Demo mode'}
+            {settings.system_mode === 'production' ? t('Production') : t('Demo mode')}
           </Badge>
         )}
       </div>
-      <div className="ml-auto flex items-center gap-2">
+      <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
         <div className="hidden text-right sm:block">
-          <div className="text-sm font-medium tabular notranslate">{new Date(now).toLocaleTimeString('en-GB')}</div>
-          <div className="text-[11px] text-subtle">{new Date(now).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+          <div className="text-sm font-medium tabular notranslate">{new Date(now).toLocaleTimeString(localeTag())}</div>
+          <div className="text-[11px] text-subtle">{new Date(now).toLocaleDateString(localeTag(), { weekday: 'long', day: 'numeric', month: 'long' })}</div>
         </div>
-        <button onClick={toggle} aria-label="Toggle theme"
+        <LanguageSwitcher />
+        <button onClick={toggle} aria-label={t('Toggle theme')}
           className="ml-2 grid h-9 w-9 place-items-center rounded-xl border bg-surface text-muted transition-colors hover:text-fg">
           <AnimatePresence mode="wait" initial={false}>
             <motion.span key={resolved} initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.18 }}>
@@ -151,6 +175,7 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
 export function AppShell({ children }: { children?: ReactNode }) {
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const t = useT();
   useEffect(() => setOpen(false), [location.pathname]);
 
   return (
@@ -165,7 +190,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
             <motion.aside className="fixed inset-y-0 left-0 z-50 w-72 border-r bg-surface lg:hidden"
               initial={{ x: -300 }} animate={{ x: 0 }} exit={{ x: -300 }} transition={{ type: 'spring', stiffness: 400, damping: 40 }}>
-              <button onClick={() => setOpen(false)} className="absolute right-3 top-6 rounded-lg p-2 text-subtle hover:bg-elevated" aria-label="Close menu">
+              <button onClick={() => setOpen(false)} className="absolute right-3 top-6 rounded-lg p-2 text-subtle hover:bg-elevated" aria-label={t('Close menu')}>
                 <X className="h-4 w-4" />
               </button>
               <Sidebar onNavigate={() => setOpen(false)} />

@@ -2,7 +2,9 @@ import { CalendarRange, TrendingUp, Trophy, Users } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { backend } from '@/services';
 import { useAsync } from '@/hooks/useAsync';
-import { addDays, formatNumber, formatShortDate, todayStr } from '@/lib/format';
+import { addDays, formatNumber, formatShortDate, localeTag, todayStr } from '@/lib/format';
+import { t as translate } from '@/i18n';
+import { useT } from '@/i18n/I18nProvider';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { Segmented } from '@/components/ui/Field';
 import { Skeleton } from '@/components/ui/Spinner';
@@ -33,10 +35,11 @@ function bucket(rows: DailyStat[], grain: Grain) {
 
 const keyLabel = (grain: Grain) => (k: string) =>
   grain === 'month'
-    ? new Date(`${k}-01T00:00:00`).toLocaleDateString('en-GB', { month: 'short', year: '2-digit' })
-    : grain === 'week' ? `Wk ${formatShortDate(k)}` : formatShortDate(k);
+    ? new Date(`${k}-01T00:00:00`).toLocaleDateString(localeTag(), { month: 'short', year: '2-digit' })
+    : grain === 'week' ? translate('Week of {day}', { day: formatShortDate(k) }) : formatShortDate(k);
 
 export default function Analytics() {
+  const t = useT();
   const [range, setRange] = useState<Range>('30');
   const [grain, setGrain] = useState<Grain>('day');
   const to = todayStr();
@@ -61,27 +64,27 @@ export default function Analytics() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Analytics" description="Visitor trends, gender comparison and employee performance."
+      <PageHeader title={t('Analytics')} description={t('Visitor trends, gender comparison and employee performance.')}
         actions={
           <Segmented value={range} onChange={setRange} options={[
-            { value: '7', label: '7 days' }, { value: '30', label: '30 days' }, { value: '90', label: '90 days' }, { value: '365', label: '12 months' },
+            { value: '7', label: t('7 days') }, { value: '30', label: t('30 days') }, { value: '90', label: t('90 days') }, { value: '365', label: t('12 months') },
           ]} />
         } />
       {daily.error && <ErrorNote message={daily.error} />}
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Total visitors" value={daily.data ? total : undefined} icon={<Users className="h-4 w-4" />} accent="brand"
+        <StatCard label={t('Total visitors')} value={daily.data ? total : undefined} icon={<Users className="h-4 w-4" />} accent="brand"
           hint={`${formatShortDate(from)} – ${formatShortDate(to)}`} />
-        <StatCard label="Daily average" value={daily.data ? Math.round(total / Math.max(1, rows.length)) : undefined} icon={<CalendarRange className="h-4 w-4" />} index={1} />
-        <StatCard label="Busiest day" value={best ? best.total : daily.data ? 0 : undefined} icon={<Trophy className="h-4 w-4" />} accent="warn" index={2}
+        <StatCard label={t('Daily average')} value={daily.data ? Math.round(total / Math.max(1, rows.length)) : undefined} icon={<CalendarRange className="h-4 w-4" />} index={1} />
+        <StatCard label={t('Busiest day')} value={best ? best.total : daily.data ? 0 : undefined} icon={<Trophy className="h-4 w-4" />} accent="warn" index={2}
           hint={best && best.total > 0 ? formatShortDate(best.day) : undefined} />
-        <StatCard label="Trend" value={daily.data ? (trend === null ? '—' : `${trend > 0 ? '+' : ''}${trend}%`) : undefined}
-          icon={<TrendingUp className="h-4 w-4" />} accent={trend !== null && trend < 0 ? 'female' : 'ok'} index={3} hint="Second half vs first half" />
+        <StatCard label={t('Trend')} value={daily.data ? (trend === null ? '—' : `${trend > 0 ? '+' : ''}${trend}%`) : undefined}
+          icon={<TrendingUp className="h-4 w-4" />} accent={trend !== null && trend < 0 ? 'female' : 'ok'} index={3} hint={t('Second half vs first half')} />
       </div>
 
       <Card>
-        <CardHeader title="Visitor trend" subtitle="Men vs women over time"
-          action={<Segmented value={grain} onChange={setGrain} options={[{ value: 'day', label: 'Daily' }, { value: 'week', label: 'Weekly' }, { value: 'month', label: 'Monthly' }]} />} />
+        <CardHeader title={t('Visitor trend')} subtitle={t('Men vs women over time')}
+          action={<Segmented value={grain} onChange={setGrain} options={[{ value: 'day', label: t('Daily') }, { value: 'week', label: t('Weekly') }, { value: 'month', label: t('Monthly') }]} />} />
         <CardBody>
           {daily.loading && !daily.data ? <Skeleton className="h-[300px]" /> : effectiveGrain === 'day'
             ? <TrendChart data={series} xKey="key" xFormatter={keyLabel(effectiveGrain)} height={300} />
@@ -91,14 +94,14 @@ export default function Analytics() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card>
-          <CardHeader title="Men vs women" subtitle="Selected period" />
+          <CardHeader title={t('Men vs women')} subtitle={t('Selected period')} />
           <CardBody className="space-y-4">
             <GenderDonut male={male} female={female} />
             <GenderLegend male={male} female={female} />
           </CardBody>
         </Card>
         <Card className="lg:col-span-2">
-          <CardHeader title="Busiest hours" subtitle="Total visitors per hour of day, selected period" />
+          <CardHeader title={t('Busiest hours')} subtitle={t('Total visitors per hour of day, selected period')} />
           <CardBody>
             {hourly.loading && !hourly.data ? <Skeleton className="h-[280px]" /> :
               <StackedBars data={hourly.data ?? []} xKey="hour" xFormatter={(h) => `${String(h).padStart(2, '0')}h`} height={280} />}
@@ -107,14 +110,14 @@ export default function Analytics() {
       </div>
 
       <Card>
-        <CardHeader title="Employee performance" subtitle="Visitors served per employee in shifts started during the period" />
+        <CardHeader title={t('Employee performance')} subtitle={t('Visitors served per employee in shifts started during the period')} />
         <CardBody>
           {perf.loading && !perf.data ? <Skeleton className="h-48" /> : (
             <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
               <HorizontalBars data={(perf.data ?? []).map((p) => ({ name: p.full_name, male: p.male, female: p.female }))} />
               <div className="scrollbar-thin overflow-x-auto">
                 <table className="table-base">
-                  <thead><tr><th>Employee</th><th className="text-right">Shifts</th><th className="text-right">Visitors</th><th className="text-right">Per hour</th></tr></thead>
+                  <thead><tr><th>{t('Employee')}</th><th className="text-right">{t('Shifts')}</th><th className="text-right">{t('Visitors')}</th><th className="text-right">{t('Per hour')}</th></tr></thead>
                   <tbody>
                     {(perf.data ?? []).map((p, i) => (
                       <tr key={p.employee_id}>
