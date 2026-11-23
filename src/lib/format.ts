@@ -3,6 +3,42 @@ import { getLocale, LOCALE_META, type Locale } from '@/i18n/locale';
 /** Intl tag for the active interface language (numbers, dates and times). */
 export const localeTag = () => LOCALE_META[getLocale()].intl;
 
+// Browsers ship no Uzbek month/weekday names (Chrome prints "M11", "Mon"), so Uzbek dates are built by hand.
+const UZ_NAMES = {
+  uz: {
+    long: ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr'],
+    short: ['yan', 'fev', 'mar', 'apr', 'may', 'iyn', 'iyl', 'avg', 'sen', 'okt', 'noy', 'dek'],
+    weekdays: ['yakshanba', 'dushanba', 'seshanba', 'chorshanba', 'payshanba', 'juma', 'shanba'],
+  },
+  'uz-cyrl': {
+    long: ['январ', 'феврал', 'март', 'апрел', 'май', 'июн', 'июл', 'август', 'сентябр', 'октябр', 'ноябр', 'декабр'],
+    short: ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'],
+    weekdays: ['якшанба', 'душанба', 'сешанба', 'чоршанба', 'пайшанба', 'жума', 'шанба'],
+  },
+} as const;
+
+export interface DateParts {
+  weekday?: boolean;
+  day?: 'numeric' | '2-digit';
+  month: 'long' | 'short';
+  year?: 'numeric' | '2-digit';
+}
+
+/** Localised date, e.g. uz "dushanba, 23-noyabr" / "23-noy, 2026" / "noyabr 2026". */
+export function formatDateParts(date: Date, o: DateParts) {
+  const locale = getLocale();
+  if (locale === 'ru') {
+    return date.toLocaleDateString('ru-RU', { weekday: o.weekday ? 'long' : undefined, day: o.day, month: o.month, year: o.year });
+  }
+  const names = UZ_NAMES[locale];
+  const month = names[o.month][date.getMonth()];
+  const year = o.year === '2-digit' ? String(date.getFullYear()).slice(-2) : String(date.getFullYear());
+  let s = o.day ? `${o.day === '2-digit' ? String(date.getDate()).padStart(2, '0') : date.getDate()}-${month}` : month;
+  if (o.year) s += o.day ? `, ${year}` : ` ${year}`;
+  if (o.weekday) s = `${names.weekdays[date.getDay()]}, ${s}`;
+  return s;
+}
+
 const formatNumberFor = (n: number | null | undefined, locale: Locale) =>
   new Intl.NumberFormat(LOCALE_META[locale].intl).format(n ?? 0).replace(/[\u00a0\u202f\s]/g, ' ');
 
@@ -29,10 +65,10 @@ export const formatTimeSec = (iso: string | null | undefined) =>
   iso ? new Date(iso).toLocaleTimeString(localeTag(), { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—';
 
 export const formatDate = (iso: string | null | undefined) =>
-  iso ? new Date(iso.length === 10 ? `${iso}T00:00:00` : iso).toLocaleDateString(localeTag(), { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+  iso ? formatDateParts(new Date(iso.length === 10 ? `${iso}T00:00:00` : iso), { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
 export const formatShortDate = (day: string) =>
-  new Date(`${day}T00:00:00`).toLocaleDateString(localeTag(), { day: '2-digit', month: 'short' });
+  formatDateParts(new Date(`${day}T00:00:00`), { day: '2-digit', month: 'short' });
 
 export const formatDateTime = (iso: string | null | undefined) => (iso ? `${formatDate(iso)}, ${formatTime(iso)}` : '—');
 

@@ -23,13 +23,12 @@ import { useSettings } from '@/hooks/useSettings';
 import { useNow } from '@/hooks/useNow';
 import { useT } from '@/i18n/I18nProvider';
 import { LanguageSwitcher } from '@/i18n/LanguageSwitcher';
-import { localeTag } from '@/lib/format';
+import { formatDateParts, localeTag } from '@/lib/format';
 import { cn } from '@/lib/cn';
-import { Badge, LiveDot } from '@/components/ui/Badge';
+import { LiveDot } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Wordmark } from './Logo';
-import { DemoBanner } from './DemoBanner';
 
 interface NavItem {
   to: string;
@@ -124,7 +123,6 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
 function Topbar({ onMenu }: { onMenu: () => void }) {
   const { resolved, toggle } = useTheme();
-  const { data: settings } = useSettings();
   const t = useT();
   const now = useNow(1000);
   const [online, setOnline] = useState(navigator.onLine);
@@ -147,16 +145,11 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
       <div className="flex min-w-0 items-center gap-2.5">
         {online ? <LiveDot /> : <LiveDot tone="danger" />}
         <span className="truncate text-sm text-muted">{online ? t('Live') : t('Offline — reconnecting')}</span>
-        {settings && (
-          <Badge tone={settings.system_mode === 'production' ? 'ok' : 'warn'} className="ml-1 hidden sm:inline-flex">
-            {settings.system_mode === 'production' ? t('Production') : t('Demo mode')}
-          </Badge>
-        )}
       </div>
       <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
         <div className="hidden text-right sm:block">
           <div className="text-sm font-medium tabular notranslate">{new Date(now).toLocaleTimeString(localeTag())}</div>
-          <div className="text-[11px] text-subtle">{new Date(now).toLocaleDateString(localeTag(), { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+          <div className="text-[11px] text-subtle">{formatDateParts(new Date(now), { weekday: true, day: 'numeric', month: 'long' })}</div>
         </div>
         <LanguageSwitcher />
         <button onClick={toggle} aria-label={t('Toggle theme')}
@@ -200,7 +193,6 @@ export function AppShell({ children }: { children?: ReactNode }) {
       </AnimatePresence>
       <div className="lg:pl-64">
         <Topbar onMenu={() => setOpen(true)} />
-        <DemoBanner />
         <main className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           <motion.div key={location.pathname} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
             {children ?? <Outlet />}

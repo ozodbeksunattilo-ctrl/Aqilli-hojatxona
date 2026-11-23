@@ -2,7 +2,7 @@ import { CalendarRange, TrendingUp, Trophy, Users } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { backend } from '@/services';
 import { useAsync } from '@/hooks/useAsync';
-import { addDays, formatNumber, formatShortDate, localeTag, todayStr } from '@/lib/format';
+import { addDays, formatDateParts, formatNumber, formatShortDate, todayStr } from '@/lib/format';
 import { t as translate } from '@/i18n';
 import { useT } from '@/i18n/I18nProvider';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
@@ -35,7 +35,7 @@ function bucket(rows: DailyStat[], grain: Grain) {
 
 const keyLabel = (grain: Grain) => (k: string) =>
   grain === 'month'
-    ? new Date(`${k}-01T00:00:00`).toLocaleDateString(localeTag(), { month: 'short', year: '2-digit' })
+    ? formatDateParts(new Date(`${k}-01T00:00:00`), { month: 'short', year: '2-digit' })
     : grain === 'week' ? translate('Week of {day}', { day: formatShortDate(k) }) : formatShortDate(k);
 
 export default function Analytics() {

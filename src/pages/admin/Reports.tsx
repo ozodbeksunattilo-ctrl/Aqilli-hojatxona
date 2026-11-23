@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { backend } from '@/services';
 import { useAsync } from '@/hooks/useAsync';
 import { useSettings } from '@/hooks/useSettings';
-import { formatDate, formatNumber, localeTag, pct, todayStr, toDayStr } from '@/lib/format';
+import { formatDate, formatDateParts, formatNumber, pct, todayStr, toDayStr } from '@/lib/format';
 import { useT } from '@/i18n/I18nProvider';
 import { downloadCsv, toCsv } from '@/utils/csv';
 import { Button } from '@/components/ui/Button';
@@ -146,7 +146,7 @@ function MonthlyReportView() {
 
   return (
     <Card>
-      <CardHeader title={t('Monthly report')} subtitle={lastDate.toLocaleDateString(localeTag(), { month: 'long', year: 'numeric' })} icon={<FileText className="h-4 w-4" />}
+      <CardHeader title={t('Monthly report')} subtitle={formatDateParts(lastDate, { month: 'long', year: 'numeric' })} icon={<FileText className="h-4 w-4" />}
         action={<div className="hidden sm:block">{controls}</div>} />
       <div className="px-5 pt-4 sm:hidden">{controls}</div>
       <CardBody className="space-y-5">

@@ -6,7 +6,7 @@ import { useAsync } from '@/hooks/useAsync';
 import { useNow } from '@/hooks/useNow';
 import { useSettings } from '@/hooks/useSettings';
 import { connectionOf } from '@/lib/devices';
-import { formatDuration, formatNumber, formatTime, localeTag, pct, secondsBetween } from '@/lib/format';
+import { formatDuration, formatNumber, formatDateParts, formatTime, pct, secondsBetween } from '@/lib/format';
 import { useT } from '@/i18n/I18nProvider';
 import { Button } from '@/components/ui/Button';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
@@ -55,7 +55,7 @@ export default function Overview() {
     <div className="space-y-6">
       <PageHeader title={t('Overview')} description={t('Live operations for {business} — today, {date}.', {
         business: settings?.business_name ?? t('Workspace'),
-        date: new Date().toLocaleDateString(localeTag(), { day: 'numeric', month: 'long' }),
+        date: formatDateParts(new Date(), { day: 'numeric', month: 'long' }),
       })} />
       {today.error && <ErrorNote message={today.error} />}
 
